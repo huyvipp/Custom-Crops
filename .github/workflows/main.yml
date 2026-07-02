@@ -35,4 +35,4 @@ jobs:
         with:
           name: CustomCrops
           path: |
-            **/build/libs/*.jar
+            **
