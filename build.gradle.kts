@@ -1,10 +1,13 @@
+import java.io.ByteArrayOutputStream
+
 plugins {
     id("java")
     id("com.gradleup.shadow") version "9.3.0"
 }
 
-val git : String = versionBanner()
-val builder : String = builder()
+val git: String = versionBanner()
+val builder: String = builder()
+
 ext["git_version"] = git
 ext["builder"] = builder
 
@@ -28,10 +31,27 @@ subprojects {
     }
 }
 
-fun versionBanner(): String = project.providers.exec {
-    commandLine("git", "rev-parse", "--short=8", "HEAD")
-}.standardOutput.asText.map { it.trim() }.getOrElse("Unknown")
+fun versionBanner(): String {
+    return runGit("rev-parse", "--short=8", "HEAD")
+}
 
-fun builder(): String = project.providers.exec {
-    commandLine("git", "config", "user.name")
-}.standardOutput.asText.map { it.trim() }.getOrElse("Unknown")
+fun builder(): String {
+    return runGit("config", "user.name")
+}
+
+fun runGit(vararg args: String): String {
+    return try {
+        val output = ByteArrayOutputStream()
+
+        project.exec {
+            commandLine("git", *args)
+            standardOutput = output
+            errorOutput = ByteArrayOutputStream()
+            isIgnoreExitValue = true
+        }
+
+        output.toString().trim().ifBlank { "Unknown" }
+    } catch (_: Exception) {
+        "Unknown"
+    }
+}
